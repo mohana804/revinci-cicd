@@ -1,0 +1,98 @@
+name: Deploy (Backend / VNet / AKS)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy"
+        required: true
+        default: dev
+        type: choice
+        options: [dev, qa, prod]
+      target:
+        description: "What to run"
+        required: true
+        default: backend
+        type: choice
+        options: [backend, vnet, aks]
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  backend:
+    if: inputs.target == 'backend'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment == 'dev' && 'Dev' || inputs.environment == 'qa' && 'QA' || 'Prod' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+      - name: Init (bootstrap backend infra)
+        working-directory: envs/${{ inputs.environment }}/backend-state
+        run: terraform init -upgrade
+      - name: Plan
+        working-directory: envs/${{ inputs.environment }}/backend-state
+        run: terraform plan -out=tfplan
+      - name: Apply
+        working-directory: envs/${{ inputs.environment }}/backend-state
+        run: terraform apply -auto-approve tfplan
+
+  vnet:
+    if: inputs.target == 'vnet'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment == 'dev' && 'Dev' || inputs.environment == 'qa' && 'QA' || 'Prod' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+      - name: Init (remote backend)
+        working-directory: envs/${{ inputs.environment }}/vnet
+        run: terraform init -backend-config=backend.hcl -upgrade
+      - name: Plan
+        working-directory: envs/${{ inputs.environment }}/vnet
+        run: terraform plan -var-file=${{ inputs.environment }}.tfvars -out=tfplan
+      - name: Apply
+        working-directory: envs/${{ inputs.environment }}/vnet
+        run: terraform apply -auto-approve tfplan
+
+  aks:
+    if: inputs.target == 'aks'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment == 'dev' && 'Dev' || inputs.environment == 'qa' && 'QA' || 'Prod' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+      - name: Init (remote backend)
+        working-directory: envs/${{ inputs.environment }}/aks
+        run: terraform init -backend-config=backend.hcl -upgrade
+      - name: Plan
+        working-directory: envs/${{ inputs.environment }}/aks
+        run: terraform plan -var-file=${{ inputs.environment }}.tfvars -out=tfplan
+      - name: Apply
+        working-directory: envs/${{ inputs.environment }}/aks
+        run: terraform apply -auto-approve tfplan
