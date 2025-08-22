@@ -1,10 +1,50 @@
-variable "rg_name" { type = string }
-variable "location" { type = string }
-variable "cluster_name" { type = string }
-variable "dns_prefix" { type = string }
-variable "kubernetes_version" { type = string }
-variable "system_node_count" { type = number }
-variable "system_node_vm_size" { type = string }
-variable "user_node_count" { type = number }
-variable "user_node_vm_size" { type = string }
-variable "tags" { type = map(string) default = {} }
+variable "rg_name" {
+  description = "Name of the Azure Resource Group."
+  type        = string
+}
+
+variable "location" {
+  description = "Azure region where resources will be deployed."
+  type        = string
+}
+
+variable "cluster_name" {
+  description = "Name of the AKS cluster."
+  type        = string
+}
+
+variable "dns_prefix" {
+  description = "DNS prefix for the AKS API server."
+  type        = string
+}
+
+variable "kubernetes_version" {
+  description = "Version of Kubernetes to deploy."
+  type        = string
+}
+
+variable "system_node_count" {
+  description = "Number of nodes in the system node pool."
+  type        = number
+}
+
+variable "system_node_vm_size" {
+  description = "VM size for the system node pool."
+  type        = string
+}
+
+variable "user_node_count" {
+  description = "Number of nodes in the user node pool."
+  type        = number
+}
+
+variable "user_node_vm_size" {
+  description = "VM size for the user node pool."
+  type        = string
+}
+
+variable "tags" {
+  description = "Map of tags to apply to resources."
+  type        = map(string)
+  default     = {}
+}

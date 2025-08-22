@@ -1,10 +1,17 @@
 rg_name      = "rg-dev-aks"
 location     = "eastus"
+
 cluster_name = "aks-dev-core"
 dns_prefix   = "aks-dev"
+
 kubernetes_version  = "1.29.7"
+
 system_node_count   = 1
 system_node_vm_size = "Standard_D4s_v5"
+
 user_node_count     = 1
 user_node_vm_size   = "Standard_D4s_v5"
-tags = { env = "dev" }
+
+tags = {
+  env = "dev"
+}
